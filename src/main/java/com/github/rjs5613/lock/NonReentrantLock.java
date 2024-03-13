@@ -6,25 +6,45 @@ public class NonReentrantLock implements Lock {
 
     private Thread owner;
 
+
     @Override
     public void lock() throws InterruptedException {
-        while (isLocked) {
-            wait();
+        synchronized (this) {
+            while (isLocked) {
+                System.out.println("Waiting Thread: " + Thread.currentThread());
+                wait();
+            }
+            isLocked = true;
+            owner = Thread.currentThread();
+            System.out.println("Giving Lock to" + Thread.currentThread());
         }
-        isLocked = true;
-        owner = Thread.currentThread();
     }
 
     @Override
     public void unlock() throws InterruptedException {
-        if (!isLocked) {
-            throw new IllegalMonitorStateException("");
+        synchronized (this) {
+            if (!isLocked) {
+                throw new IllegalMonitorStateException("");
+            }
+            if (owner == Thread.currentThread()) {
+                throw new IllegalMonitorStateException("");
+            }
+            isLocked = false;
+            owner = null;
+            notifyAll();
         }
-        if (owner == Thread.currentThread()) {
-            throw new IllegalMonitorStateException("");
+    }
+
+    public static void main(String[] args) throws InterruptedException {
+        Lock lock = new NonReentrantLock();
+        acquireLock(1, lock);
+    }
+
+    private static void acquireLock(int count, Lock lock) throws InterruptedException {
+        if (count == 5) {
+            return;
         }
-        isLocked = false;
-        owner = null;
-        notifyAll();
+        lock.lock();
+        acquireLock(count + 1, lock);
     }
 }

@@ -12,31 +12,50 @@ public class ReentrantLock implements Lock {
 
     @Override
     public void lock() throws InterruptedException {
-        if (isLocked) {
-            if (owner != Thread.currentThread()) {
-                while (isLocked) {
-                    wait();
+        synchronized (this) {
+            if (isLocked) {
+                if (owner != Thread.currentThread()) {
+                    while (isLocked) {
+                        wait();
+                    }
                 }
             }
+            isLocked = true;
+            lockCount++;
+            owner = Thread.currentThread();
+            System.out.println("Giving Lock to " + Thread.currentThread());
         }
-        isLocked = true;
-        lockCount++;
-        owner = Thread.currentThread();
+
     }
 
     @Override
     public void unlock() throws InterruptedException {
-        if (!isLocked) {
-            throw new IllegalMonitorStateException("");
+        synchronized (this) {
+            if (!isLocked) {
+                throw new IllegalMonitorStateException("");
+            }
+            if (owner != Thread.currentThread()) {
+                throw new IllegalMonitorStateException("");
+            }
+            owner = null;
+            isLocked = false;
+            lockCount--;
+            if (lockCount == 0) {
+                notifyAll();
+            }
         }
-        if (owner != Thread.currentThread()) {
-            throw new IllegalMonitorStateException("");
+    }
+
+    public static void main(String[] args) throws InterruptedException {
+        ReentrantLock lock = new ReentrantLock();
+        acquireLock(1, lock);
+    }
+
+    private static void acquireLock(int count, ReentrantLock lock) throws InterruptedException {
+        if (count == 5) {
+            return;
         }
-        owner = null;
-        isLocked = false;
-        lockCount--;
-        if (lockCount == 0) {
-            notifyAll();
-        }
+        lock.lock();
+        acquireLock(count + 1, lock);
     }
 }
