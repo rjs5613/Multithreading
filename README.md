@@ -17,3 +17,7 @@
   - If not the lock checks if the lock is held by the same thread, If yes, the lock is given to the thread.
   - If the lock is acquired by other thread, the current thread is put on wait.
 - This will be particularly helpful in recursive calls where lock is required.
+- **Condition** are a construct which gives us functionality like wait and notify without using synchronised keyword.
+- When we use **wait, notify or notifyAll**, it should be called from inside a **synchronised block/method** or else it will throw **IllegalMonitorStateException**.
+- When we use reentrant lock or any other implementation of Lock interface, we don't use synchronised, so if we want behaviour like **wait , notify, notifyAll**, we can use Condition object's, **await, signal and signalAll**.
+- Syntax: `Condition = loc.newCondition`
