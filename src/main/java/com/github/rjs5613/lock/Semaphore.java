@@ -26,10 +26,13 @@ public class Semaphore {
 
 
     public void acquire() throws InterruptedException {
+        // We will use reentrant lock here. We can use synchronised here as well, in that case we won't need to use Condition variable we can use Object class's wait and notify.
         lock.lock();
         try {
             while (availablePermit == 0) {
                 System.out.println("Waiting Thread: " + Thread.currentThread());
+                //We can't use object class's wait method here as this code is not inside synchronised block / method
+                //Since we need the thread to wait, we will use condition.await here.
                 condition.await();
             }
             this.acquiringThreads.add(Thread.currentThread());
@@ -46,6 +49,8 @@ public class Semaphore {
                 if (availablePermit < maxPermits) {
                     availablePermit++;
                     acquiringThreads.remove(Thread.currentThread());
+                    //Can't use notifyAll as this code is not synchronised.
+                    // So we will use condition.signalAll to achieve the same functionality
                     condition.signalAll();
                 }
             }

@@ -1,29 +1,47 @@
 package com.github.rjs5613.lock;
 
-import java.util.Deque;
+import java.util.LinkedList;
 
 public class ReentrantLock implements Lock {
 
     private Thread owner;
 
+    private final boolean isFair;
+
     private boolean isLocked;
 
     private int lockCount;
 
+    private LinkedList<Thread> waitingThreads = new LinkedList<>();
+
+    public ReentrantLock(boolean isFair) {
+        this.isFair = isFair;
+    }
+
     @Override
     public void lock() throws InterruptedException {
         synchronized (this) {
+            Thread currentThread = Thread.currentThread();
             if (isLocked) {
-                if (owner != Thread.currentThread()) {
-                    while (isLocked) {
+                if (owner != currentThread) {
+                    while (true) {
+                        if (isFair) {
+                            if (isLocked && waitingThreads.peek() == currentThread) {
+                                break;
+                            }
+                        } else {
+                            if (!isLocked) {
+                                break;
+                            }
+                        }
                         wait();
                     }
                 }
             }
             isLocked = true;
             lockCount++;
-            owner = Thread.currentThread();
-            System.out.println("Giving Lock to " + Thread.currentThread());
+            owner = currentThread;
+            System.out.println("Giving Lock to " + currentThread);
         }
 
     }
@@ -47,7 +65,7 @@ public class ReentrantLock implements Lock {
     }
 
     public static void main(String[] args) throws InterruptedException {
-        ReentrantLock lock = new ReentrantLock();
+        ReentrantLock lock = new ReentrantLock(true);
         acquireLock(1, lock);
     }
 
