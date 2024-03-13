@@ -26,7 +26,7 @@ public class ReentrantLock implements Lock {
                 if (owner != currentThread) {
                     while (true) {
                         if (isFair) {
-                            if (isLocked && waitingThreads.peek() == currentThread) {
+                            if (!isLocked && waitingThreads.peek() == currentThread) {
                                 break;
                             }
                         } else {
@@ -41,6 +41,7 @@ public class ReentrantLock implements Lock {
             isLocked = true;
             lockCount++;
             owner = currentThread;
+            waitingThreads.poll();
             System.out.println("Giving Lock to " + currentThread);
         }
 

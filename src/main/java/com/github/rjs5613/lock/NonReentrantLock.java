@@ -27,7 +27,7 @@ public class NonReentrantLock implements Lock {
             waitingThreads.add(currentThread);
             while (true) {
                 if (isFair) {
-                    if (isLocked || waitingThreads.peek() != currentThread) {
+                    if (!isLocked && waitingThreads.peek() == currentThread) {
                         break;
                     }
                 } else if (!isLocked) {
